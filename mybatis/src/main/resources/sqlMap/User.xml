@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTDMapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace命名空间，为了对sql语句进行隔离，方便管理，mapper开发dao方式，使用namespace有特殊作用
+mapper代理开发时将namespace指定为mapper接口的全限定名
+ -->
+<mapper namespace="com.my.mybatis.mapper.UserMapper">
+<!--在mapper.xml文件中配置很多的sql语句，执行每个sql语句时，封装为MappedStatement对象
+mapper.xml以statement为单位管理sql语句
+ -->
+ 	
+ 	
+ 	
+   <!-- 根据id查询用户信息 -->
+   <!--
+      id：唯一标识一个statement
+      #{}：表示一个占位符，如果#{}中传入简单类型的参数，#{}中的名称随意
+      parameterType：输入参数的类型，通过#{}接收parameterType输入的参数
+      resultType：输出结果类型，不管返回是多条还是单条，指定单条记录映射的pojo类型
+    -->
+   <select id="findUserById" parameterType="int" resultType="user">
+     SELECT 
+     id as "id",
+     username as "username",
+     sex as "sex",
+     birthday as "birthday",
+     address as "address" 
+	 FROM USER WHERE id= #{id}
+   </select>
+   
+   <resultMap id="userResultMap" type="user">
+	  <id property="id" column="id" />
+	  <result property="username" column="username"/>
+	  <result property="sex" column="sex"/>
+	  <result property="birthday" column="birthday"/>
+	  <result property="address" column="address"/>
+	</resultMap>
+   
+   <select id="findUserByName" parameterType="String" resultMap="userResultMap">
+      SELECT * FROM USER WHERE username= #{name}
+   </select>
+   
+   <!-- 返回hashmap类型，字段名为key，值为value -->
+   <select id="selectUser" parameterType="int" resultType="hashmap">
+ 	 SELECT * FROM USER WHERE id= #{id}
+	</select>
+	
+	<!-- 单行插入  用user.getId()可以直接获取插入后的自增主键值-->
+	<insert id="insertUser" useGeneratedKeys="true"
+    keyProperty="id">
+	  insert into User (username,sex,birthday,address)
+	  values (#{username},#{sex},#{birthday},#{address})
+	</insert>
+	
+	<!-- 批量插入 -->
+	<insert id="insertUserList" parameterType="java.util.List">
+	  insert into User (username,sex,birthday,address) values
+	  <foreach item="item" collection="list" separator=",">
+	  	(#{item.username},#{item.sex},#{item.birthday},#{item.address})
+	  </foreach>
+	</insert>
+	
+	<!-- update -->
+	<update id="updateUser">
+	  update User set
+	    username = #{username},
+	    sex = #{sex},
+	    birthday = #{birthday},
+	    address = #{address}
+	  where id = #{id}
+	</update>
+	
+	<!-- delete -->
+	<delete id="deleteUser">
+		delete from User where id = #{id}
+	</delete>
+</mapper>

@@ -1,0 +1,81 @@
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTDConfig 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!-- 配置文件的元素有顺序要求 -->
+<configuration>
+   <!-- 属性定义
+   加载一个properties文件db.properties是和数据库连接的一些信息
+   在 properties标签中配置属性值
+    -->
+   <properties resource="db.properties"/>
+   
+   <!-- 配置懒加载设置 -->
+   <settings>
+    	<setting name="lazyLoadingEnabled" value="true"/>
+     	<setting name="aggressiveLazyLoading" value="false"/>
+	</settings>
+   
+   <!-- 设置别名 -->
+   <typeAliases>
+ 	<package name="com.my.mybatis.model"/>
+   </typeAliases>
+   
+   <!-- 
+    plugins在配置文件中的位置必须符合要求，否则会报错，顺序如下:
+    properties?, settings?, 
+    typeAliases?, typeHandlers?, 
+    objectFactory?,objectWrapperFactory?, 
+    plugins?, 
+    environments?, databaseIdProvider?, mappers?
+	-->
+	<plugins>
+	    <!-- com.github.pagehelper为PageHelper类所在包名 -->
+	    <plugin interceptor="com.github.pagehelper.PageInterceptor">
+	        <property name="helperDialect" value="mysql"/>
+	        <!-- 该参数默认为false -->
+	        <!-- 设置为true时，会将RowBounds第一个参数offset当成pageNum页码使用 -->
+	        <!-- 和startPage中的pageNum效果一样-->
+	        <property name="offsetAsPageNum" value="true"/>
+	        <!-- 该参数默认为false -->
+	        <!-- 设置为true时，使用RowBounds分页会进行count查询 -->
+	        <property name="rowBoundsWithCount" value="true"/>
+	        <!-- 设置为true时，如果pageSize=0或者RowBounds.limit = 0就会查询出全部的结果 -->
+	        <!-- （相当于没有执行分页查询，但是返回结果仍然是Page类型）-->
+	        <property name="pageSizeZero" value="true"/>
+	        <!-- 3.3.0版本可用 - 分页参数合理化，默认false禁用 -->
+	        <!-- 启用合理化时，如果pageNum<1会查询第一页，如果pageNum>pages会查询最后一页 -->
+	        <!-- 禁用合理化时，如果pageNum<1或pageNum>pages会返回空数据 -->
+	        <property name="reasonable" value="false"/>
+	        <!-- 3.5.0版本可用 - 为了支持startPage(Object params)方法 -->
+	        <!-- 增加了一个`params`参数来配置参数映射，用于从Map或ServletRequest中取值 -->
+	        <!-- 可以配置pageNum,pageSize,count,pageSizeZero,reasonable,不配置映射的用默认值 -->
+	        <!-- 不理解该含义的前提下，不要随便复制该配置 -->
+	        <!-- <property name="params" value="pageNum=start;pageSize=limit;"/> -->
+	        <!-- always总是返回PageInfo类型,check检查返回类型是否为PageInfo,none返回Page 5.0版本没有这个属性-->
+	        <!-- <property name="returnPageInfo" value="check"/> -->
+		</plugin>
+	</plugins>
+   
+   <!-- 和spring整合后 environments配置将废除-->
+   <environments default="development">
+      <environment id="development">
+      <!--使用jdbc事务管理-->
+         <transactionManager type="JDBC" />
+      <!--数据库连接池-->
+         <dataSource type="POOLED">
+            <property name="driver" value="${jdbc.driver}"/>
+            <property name="url" value="${jdbc.url}"/>
+            <property name="username" value="${jdbc.username}"/>
+            <property name="password" value="${jdbc.password}"/>
+         </dataSource>
+      </environment>
+   </environments>
+   
+   <mappers>
+      <!--通过resource引用mapper的映射文件 -->
+      <mapper resource="sqlmap/User.xml" />
+      <mapper resource="sqlmap/Order.xml" />
+      <mapper resource="sqlmap/Item.xml" />
+   </mappers>
+</configuration>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTDMapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace命名空间，为了对sql语句进行隔离，方便管理，mapper开发dao方式，使用namespace有特殊作用
+mapper代理开发时将namespace指定为mapper接口的全限定名
+ -->
+<mapper namespace="orderDemo">
+<!--在mapper.xml文件中配置很多的sql语句，执行每个sql语句时，封装为MappedStatement对象
+mapper.xml以statement为单位管理sql语句
+ -->
+ 	
+ <!-- 通过number查询Order，并查询得到该Order的User （客服后台管理场景）
+ 	测试关联查询及懒加载，学习resultmap的用法。懒加载还需要设置settings
+ -->
+ <select id="selectUser" resultType="user">
+ 	select * from user where id = #{id}
+ </select>
+ <resultMap type="order" id="orderResult">
+ 	<association property="user" column="user_id" javaType="user" select="selectUser" fetchType="lazy"/>
+ </resultMap>
+ <select id="selectOrderByNumber" resultMap="orderResult">
+ 	select * from orders where number = #{number}
+ </select>
+ <!-- 懒加载end -->
+ <!-- 连接查询，结果集映射 -->
+ <select id="selectOrder" resultMap="orderJoinResult">
+ 	select 
+ 	o.id as order_id,
+ 	o.number as order_number,
+ 	o.createTime as order_createTime,
+ 	o.note as order_note,
+ 	o.user_id as order_user_id,
+ 	u.id as user_id,
+ 	u.username as user_name,
+ 	u.birthday as user_birthday,
+ 	u.address as user_address,
+ 	u.sex as user_sex
+ 	from Orders o 
+ 	left outer join User u 
+ 	on u.id = o.user_id 
+ 	where o.number = #{number}
+ </select>
+ <resultMap type="order" id="orderJoinResult">
+ 	<id property="id" column="order_id"/>
+ 	<result property="number" column="order_number"/>
+ 	<result property="createTime" column="order_createTime"/>
+ 	<result property="note" column="order_note"/>
+ 	<association property="user" column="order_user_id" resultMap="userResult"/>
+ </resultMap>
+ <resultMap id="userResult" type="user">
+  <id property="id" column="user_id"/>
+  <result property="username" column="user_name"/>
+  <result property="birthday" column="user_birthday"/>
+  <result property="sex" column="user_sex"/>
+  <result property="address" column="user_address"/>
+</resultMap>
+ <!-- 连接查询end -->
+ 
+ <!-- 集合的嵌套查询,根据订单编号查询得到所有的订单条目详情，再查询条目详情对应的商品详情 -->
+ <select id="selectOrderWithDetail" resultMap="orderWithDetailsResult">
+ 	select * from orders where number = #{number}
+ </select>
+ <select id="selectOrderDetail" resultMap="orderDetailResult">
+ 	select * from orderdetail where id = #{id}
+ </select>
+ <resultMap type="orderDetail" id="orderDetailResult">
+ 	<association property="item" column="items_id" javaType="item" select="selectItem"/>
+ </resultMap>
+ <select id="selectItem" resultType="item">
+ 	select * from items where id = #{id}
+ </select>
+ <resultMap type="order" id="orderWithDetailsResult">
+ 	<collection property="detailList" column="id" javaType="ArrayList" ofType="orderDetail" select="selectOrderDetail"/>
+ </resultMap>
+ <!-- 集合嵌套查询end -->
+ 
+ <!-- 结果的嵌套映射 -->
+ <select id="selectOrderJoinDetail" resultMap="orderJoinDetailResult">
+ 	select 
+ 	o.id as order_id,
+ 	o.number as order_number,
+ 	o.createTime as order_createTime,
+ 	o.note as order_note,
+ 	o.user_id as order_user_id,
+ 	d.id as order_detail_id,
+ 	d.items_num as items_num,
+ 	d.items_id as items_id,
+ 	i.itemsname as item_name,
+ 	i.price as item_price,
+ 	i.detail as item_detail,
+ 	i.createTime as item_createTime
+ 	from orders o 
+ 	left outer join orderDetail d 
+ 	on d.orders_id = o.id 
+ 	left outer join items i
+ 	on d.items_id = i.id
+ 	where o.number = #{number}
+ </select>
+ <resultMap type="order" id="orderJoinDetailResult">
+ 	<id property="id" column="order_id"/>
+ 	<result property="number" column="order_number"/>
+ 	<result property="createTime" column="order_createTime"/>
+ 	<result property="note" column="order_note"/>
+ 	<collection property="detailList" ofType="orderDetail" javaType="ArrayList" column="order_id" resultMap="orderDetailMapResult" />
+ </resultMap>
+ <resultMap type="orderDetail" id="orderDetailMapResult">
+ 	<id property="id" column="order_detail_id"/>
+ 	<result property="itemsNumber" column="items_num"/>
+ 	<association property="item" column="items_id" javaType="item" resultMap="itemDetailResult"/>
+ </resultMap>
+ <resultMap type="item" id="itemDetailResult">
+ 	<id property="id" column="items_id"/>
+ 	<result property="itemsname" column="item_name"/>
+ 	<result property="price" column="item_price"/>
+ 	<result property="detail" column="item_detail"/>
+ 	<result property="createTime" column="item_createTime"/>
+ </resultMap>
+ <!-- 结果的嵌套映射end -->
+</mapper>
